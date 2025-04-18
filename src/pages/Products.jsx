@@ -16,14 +16,31 @@ export function Products() {
     style: [],
   });
 
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [allProducts, setAllProducts] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await axios.get("http://localhost:4000/api/category");
+        setCategories(res.data);
+      } catch (err) {
+        console.error("Error fetching categories:", err.message);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await axios.get("http://localhost:4000/api/products");
+        const url = selectedCategory
+          ? `http://localhost:4000/api/products?category=${selectedCategory}`
+          : "http://localhost:4000/api/products";
+        const res = await axios.get(url);
         setAllProducts(res.data);
         setFiltered(res.data);
       } catch (err) {
@@ -31,7 +48,7 @@ export function Products() {
       }
     };
     fetchProducts();
-  }, []);
+  }, [selectedCategory]);
 
   const handleFilter = () => {
     const result = allProducts.filter((product) => {
@@ -62,6 +79,21 @@ export function Products() {
       <h1 className="text-4xl md:text-5xl font-extrabold text-black mb-8 text-center mt-8">
         All Products
       </h1>
+
+      <div className="flex justify-center mb-6">
+        <select
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm"
+        >
+          <option value="">All Categories</option>
+          {categories.map((cat) => (
+            <option key={cat._id} value={cat._id}>
+              {cat.name}
+            </option>
+          ))}
+        </select>
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row gap-8">
         <FilterSidebar
